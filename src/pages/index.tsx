@@ -28,8 +28,6 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
     formState: { errors, isDirty, isValid },
   } = useForm<Body>({ mode: "onChange" });
 
-  const disabled = !isDirty || !isValid;
-
   const login = async () => {
     try {
       const user = await firebase.auth().signInAnonymously();
@@ -38,17 +36,6 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
       alert(err.message);
     }
   };
-
-  // const logout = async () => {
-  //   if (!confirm("sessionが削除されますがログアウトしますか?")) {
-  //     return;
-  //   }
-  //   try {
-  //     await firebase.auth().signOut();
-  //   } catch (err) {
-  //     alert(err.message);
-  //   }
-  // };
 
   const deletePost = async (id: string) => {
     if (!confirm("本当に削除しますか?")) {
@@ -143,7 +130,7 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
             placeholder="メッセージを入力してください"
           />
           <p>{errors.body?.message}</p>
-          <button type="submit" disabled={disabled}>
+          <button type="submit" disabled={!isDirty || !isValid}>
             投稿
           </button>
         </form>
