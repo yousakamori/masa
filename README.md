@@ -1,3 +1,11 @@
+## Site URL
+
+[人生＼\(^o^\)／ｵﾜﾀ](https://masa-delta.vercel.app/)
+
+## Screenshot
+
+![](docs/screenshot.png)
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

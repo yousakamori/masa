@@ -1,38 +1,30 @@
+import dynamic from "next/dynamic";
 import { GetStaticProps, NextPage } from "next";
-import { BsTrashFill } from "react-icons/bs";
 import Head from "next/head";
 import { useState } from "react";
 import { useUser } from "../context/userContext";
 import firebase from "firebase";
 import admin from "../firebase/node";
 import { Post } from "../types";
-import { formatDistanceToNow } from "date-fns";
-import { ja } from "date-fns/locale";
-import { useForm } from "react-hook-form";
-import { Button, Container, Spinner } from "../components/ui";
+import { Container } from "../components/ui";
 import { Layout } from "../components/common";
-import TextareaAutosize from "react-textarea-autosize";
+import { Posts } from "../components/Posts/Posts";
+import { Body, FormProps } from "../components/Form";
+
+const Form = dynamic<FormProps>(
+  () => import("../components/Form").then((mod) => mod.Form),
+  { ssr: false }
+);
 
 type Props = {
   posts: Post[];
-};
-
-type Body = {
-  body: string;
 };
 
 const Page: NextPage<Props> = ({ posts: initPosts }) => {
   const { user, loadingUser } = useUser();
   const [posts, setPosts] = useState<Post[]>(initPosts);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isDirty, isValid },
-  } = useForm<Body>({ mode: "onChange" });
-
-  const deletePost = async (id: string) => {
+  const handleDeletePost = async (id: string) => {
     if (!confirm("本当に削除しますか?")) {
       return;
     }
@@ -45,7 +37,7 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
     }
   };
 
-  const createPost = async ({ body }: Body) => {
+  const handleCreatePost = async ({ body }: Body) => {
     if (!user) {
       alert("ログインしてね");
       return;
@@ -62,14 +54,12 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
       await firebase.firestore().doc(`posts/${newPost.id}`).set(newPost);
 
       setPosts([
-        ...posts,
         {
           ...newPost,
           createdAt: newPost.createdAt.toDate().toISOString(),
         },
+        ...posts,
       ]);
-
-      reset();
     } catch (err) {
       alert(err.message);
     }
@@ -84,74 +74,15 @@ const Page: NextPage<Props> = ({ posts: initPosts }) => {
       </Head>
 
       <Container className="max-w-3xl mt-6 bg-white">
-        {loadingUser && <Spinner className="mx-auto" />}
-        {user && (
-          <form onSubmit={handleSubmit(createPost)}>
-            <p className="text-sm text-gray-600">
-              あなたのIDは
-              <span className="mx-1 font-semibold">{user.uid}</span>です
-            </p>
-            <TextareaAutosize
-              {...register("body", {
-                required: true,
-                maxLength: {
-                  value: 140,
-                  message: "140文字以下で入力してください",
-                },
-              })}
-              className="w-full px-2 py-1 mt-3 text-gray-800 placeholder-gray-500 placeholder-opacity-50 border border-gray-400 rounded-lg resize-none focus:outline-none"
-              minRows={3}
-              placeholder="メッセージを入力してください"
-            />
-            <p className="mt-3 text-sm text-red-500">{errors.body?.message}</p>
-            <Button
-              className="mt-3"
-              type="submit"
-              disabled={!isDirty || !isValid}
-            >
-              投稿する
-            </Button>
-          </form>
-        )}
+        <Form
+          loadingUser={loadingUser}
+          user={user}
+          createPost={handleCreatePost}
+        />
 
         <div className="mt-6">
-          <h2 className="text-xl font-semibold border-gray-800">投稿一覧</h2>
-          {posts?.map((post) => (
-            <article
-              className="px-3 py-2 mt-3 border border-gray-200 rounded-lg"
-              key={post.id}
-            >
-              <aside className="flex justify-between">
-                <div className="flex space-x-3">
-                  <div className="text-sm font-semibold text-gray-700">
-                    {post.userId}
-                  </div>
-                  <time className="text-sm text-gray-400">
-                    {formatDistanceToNow(new Date(post.createdAt), {
-                      addSuffix: true,
-                      locale: ja,
-                    })}
-                  </time>
-                </div>
-
-                {post.userId === user?.uid && (
-                  <div>
-                    <button onClick={() => deletePost(post.id)}>
-                      <BsTrashFill size={20} className="text-red-500" />
-                    </button>
-                  </div>
-                )}
-              </aside>
-              <div className="mt-2 text-sm text-gray-700">
-                {post.body.split("\n").map((str) => (
-                  <>
-                    {str}
-                    <br />
-                  </>
-                ))}
-              </div>
-            </article>
-          ))}
+          <h2 className="text-xl font-semibold border-gray-800">メッセージ</h2>
+          <Posts posts={posts} user={user} deletePost={handleDeletePost} />
         </div>
       </Container>
     </Layout>
@@ -163,7 +94,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     await admin
       .firestore()
       .collection("posts")
-      .orderBy("createdAt", "asc")
+      .orderBy("createdAt", "desc")
       .get()
   ).docs.map((doc) => ({
     ...doc.data(),
