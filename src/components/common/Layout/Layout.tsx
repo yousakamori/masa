@@ -5,16 +5,15 @@ import { SiTwitter, SiNiconico, SiYoutube, SiGithub } from "react-icons/si";
 import { Button, Container } from "../../ui";
 import { useUser } from "../../../context/userContext";
 
-export type LayoutType = {
+export type LayoutProps = {
   children?: React.ReactNode;
 };
 
-export const Layout: React.VFC<LayoutType> = ({ children }) => {
+export const Layout: React.VFC<LayoutProps> = ({ children }) => {
   const { user } = useUser();
   const login = async () => {
     try {
-      const user = await firebase.auth().signInAnonymously();
-      console.log(user);
+      await firebase.auth().signInAnonymously();
     } catch (err) {
       alert(err.message);
     }
