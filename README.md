@@ -1,6 +1,6 @@
 ## Site URL
 
-[人生＼\(^o^\)／ｵﾜﾀ](https://masa-delta.vercel.app/)
+[人生＼\(^o^\)／ｵﾜﾀ](https://masa-alpha.vercel.app/)
 
 ## Screenshot
 
